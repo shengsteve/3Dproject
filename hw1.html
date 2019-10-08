@@ -37,16 +37,23 @@ var keyboard;
 var turn = false;
 var open = 1;
 var on=1;
+var c= new THREE.Clock();
 
+function move(){
+		if(turn && open==2) setTimeout(move,1000);
+		angle += Math.PI*2/60;
+}
 init();
 animate();
 $("#toggle").click(function() {
   turn = !turn;
+  if(turn && open==2) setTimeout(move,0);
 });
 $("#quartz").click(function(){
     open=2;
     $("#sector").removeClass("hide");
     $("#quartz").addClass("hide");
+    setTimeout(move,1000);
 });
 $("#sector").click(function(){
     open=3;
@@ -58,14 +65,14 @@ $("#analog").click(function(){
     $("#analog").addClass("hide");
     $("#quartz").removeClass("hide");
 });
-function sleep(milliseconds) {
+/*function sleep(milliseconds) {
   var start = new Date().getTime();
   for (var i = 0; i < 1000000000000; i++) {
     if ((new Date().getTime() - start) > milliseconds){
       break;
     }
   }
-}
+}*/
 
 function init () {
 	
@@ -78,10 +85,10 @@ function init () {
 	renderer.setClearColor (0x888888);
 	
 	scene = new THREE.Scene();
-	var grid = new THREE.GridHelper(20,20, 0xaaaa00, 0x333333);
-	scene.add (grid);
-	var axes = new THREE.AxesHelper (5);
-	scene.add (axes);
+	//var grid = new THREE.GridHelper(20,20, 0xaaaa00, 0x333333);
+	//scene.add (grid);
+	//var axes = new THREE.AxesHelper (5);
+	//scene.add (axes);
 	
 	camera = new THREE.PerspectiveCamera (8, width/height, 1, 1000);
 	camera.position.y = 16;
@@ -119,6 +126,7 @@ function init () {
 	var material = new THREE.MeshBasicMaterial( { color:"white"} );
 	circle3 = new THREE.Mesh( geometry, material );
 	mom3.add( circle3 );
+  
   //keyboard = new KeyboardState();
 		
 }
@@ -138,21 +146,17 @@ function animate() {
 	
 	//if (keyboard.pressed('G'))
 
-  
-	if(turn){
-  if(open==1){
-  angle += Math.PI*2/60/60;
-	}
-	else if(open==2){
-    	angle += Math.PI*2/60;
-      sleep(1000);
-     }
+  if(turn){
+  	if(open==1&&turn){ 
+    angle += c.getDelta()*6/60;
+    }
+
      if(open==3){
       if(angle<=0||angle>Math.PI*2){
       	angle = 2*Math.PI;
         mom3.add(circle3);
       }
-      angle -= Math.PI*2/60/60;
+      angle -= c.getDelta()*6/60;
       mom2.remove(circle2);
       //扇形
       var geometry = new THREE.CircleBufferGeometry(11,100,76.96,angle);
@@ -163,6 +167,7 @@ function animate() {
       scene.add(mom2);
      }
    }
+   else  c.getDelta();  
    if(open==3){
      if(on==1){
      	scene.add(mom3);
