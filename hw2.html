@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+</style>
+</head>
+<body> 
+<button id='button'>start</button>
+<div style="position:absolute;top:15px;width:100%;text-align:center;color:black">
+ W/S前後移動戰車 A/D左右旋轉砲台 R/F砲管上下移動 標靶打中得1分 
+<br><br>
+<span style="text-align: center;left: 20px;top: 20px;" id ='score'>0</span>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/107/three.min.js">
+</script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+
+
+<script>
+var renderer, camera, controls, scene, axes, score=0, cannon, target, score, turn, turn2=false ,turret, stats, light, light2;
+var keyboard = new KeyboardState();
+var theta1=-0.2, theta2=0.2;
+var BALLs=[];
+
+init();
+animate();
+
+$('#button').click(function(){
+			turn2=!turn2;
+})
+
+class balls{
+   constructor(mesh,x,y,z,v){
+   	this.mesh = mesh;
+    this.pos =new THREE.Vector3(x,y,z);
+    this.vel =v;
+    this.force = new THREE.Vector3(0,-30,0);
+    scene.add(this.mesh);
+   }
+   update(dt){
+   	this.vel.add ( this.force.clone().multiplyScalar (dt));
+    this.pos.add ( this.vel.clone().multiplyScalar (dt));
+    
+    if(this.pos.y<0){
+    	this.pos.y=0;
+      this.vel.y*= -0.85;
+    }
+    if(this.pos.x>=150||this.pos.z>=150||this.pos.z<=-150||this.pos.x<=-150){
+    	scene.remove(this.mesh);
+    }
+    if(this.pos.x<target.position.x+5&&this.pos.x>target.position.x-5&&this.pos.y>target.position.y-5&&this.pos.y<target.position.y+5&&this.pos.z<target.position.z+5&&this.pos.z>target.position.z-5){
+    score++;
+    document.getElementById("score").innerText=score;
+    scene.remove(target);
+    var a1 = Math.random() <0.5 ? -1:1;
+    a1*=100;
+    var a2 = Math.floor(Math.random()*50)+1; 
+    target.position.set(a1,a2,0);
+    scene.add(target);
+     }
+    this.mesh.position.copy(this.pos);
+   }
+}
+function buildParts() {
+    var parts = [];
+    
+	var mat = new THREE.MeshPhongMaterial({color:0x2a5929});
+	var base = new THREE.Object3D();
+	var baseMesh = new THREE.Mesh (new THREE.BoxGeometry (40,10,20), mat);
+	base.add (baseMesh);
+	baseMesh.position.set (-10,5,0);
+	parts.push (base);
+    var turret = new THREE.Mesh (new THREE.CylinderGeometry (10,10,10, 30),mat);
+    parts.push (turret);
+    
+    var turn = new THREE.Object3D();
+    var turnMesh = new THREE.Mesh (new THREE.CylinderGeometry (1.5, 1.5, 10, 30), mat);
+    var axis = new THREE.AxisHelper(20);
+    turn.add (turnMesh,axis);
+    turnMesh.rotation.x = Math.PI/2;
+    parts.push (turn);
+    
+    cannon = new THREE.Object3D()
+    var cannon0 = new THREE.Object3D()
+    var cannonMesh = new THREE.Mesh (new THREE.CylinderGeometry (1.5, 1.5, 10, 30), mat);
+    cannon0.add (cannonMesh);
+    cannonMesh.position.y = 5;
+    cannon.add (cannon0);
+    cannon0.rotation.z = -Math.PI/2;
+    parts.push (cannon);
+    
+    return parts;
+}
+function buildTank(){
+  parts = buildParts();
+  
+  tank = new THREE.Object3D();
+  base = parts[0]
+  tank.add (base);
+  
+  turret = parts[1]
+  tank.add (turret)
+  turret.position.set (0, 15, 0);
+  console.log (theta1);
+  turret.rotation.y = theta1;
+  
+  turn = parts[2]
+  turn.position.x = 10
+  turn.rotation.z = theta2;
+  turret.add (turn);
+  
+  cannon = parts[3]
+  turn.add (cannon);
+  
+  return tank;
+}
+function init() {
+  renderer = new THREE.WebGLRenderer({
+    antialias: true
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+  document.body.appendChild(renderer.domElement);
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.x = 160;
+  camera.position.z = 80;  // important
+  camera.position.y = 160;
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  scene = new THREE.Scene();
+  
+  let gridXZ = new THREE.GridHelper(300, 10, 'white', 'white');
+  scene.add(gridXZ);
+	clock= new THREE.Clock();
+	
+  tank = buildTank();
+  
+  scene.add (tank);
+  target = new THREE.Mesh(new THREE.BoxGeometry (10,10,10),new THREE.MeshPhongMaterial());
+  var a1 = Math.random() <0.5 ? -1:1;
+  a1*=100;
+  var a2 = Math.floor(Math.random()*50)+1; 
+  target.position.set(a1,a2,0);
+  scene.add(target);
+  light = new THREE.PointLight(0x05f0c9,1,500);
+  light2 = new THREE.PointLight(0x05f0c9,1,500);
+  light.position.set(0,50,30);
+  light2.position.set(0,50,-30);
+  scene.add(light,light2);
+}
+
+function animate() {
+	var vector2=new THREE.Vector3(0,1,0);
+	keyboard.update();
+  
+  if(tank.position.x<140){
+  if(keyboard.pressed("W")) tank.position.x+=1;
+  }
+  
+  if(tank.position.x>-120){
+  if(keyboard.pressed("S")) tank.position.x-=1;
+	}
+  
+  if (keyboard.pressed("A")) 
+  if(turret.rotation.y<2*Math.PI){ 
+ 		turret.rotation.y+=0.05;
+  }
+  else{
+    turret.rotation.y=0;
+  }
+  
+  if (keyboard.pressed("D")) 
+  if(turret.rotation.y>-2*Math.PI){
+  	turret.rotation.y-=0.05;
+  }
+  else{
+    turret.rotation.y=2*Math.PI;
+  }
+  
+  if(turn.rotation.z<Math.PI/4){
+  	if(keyboard.pressed("R")) turn.rotation.z+=0.1;
+  }
+  
+  if(turn.rotation.z>-Math.PI/4){
+  	if(keyboard.pressed("F")) turn.rotation.z-=0.1;
+  }
+  
+  if(keyboard.down("space")){
+  		let ball = new THREE.Mesh(new THREE.SphereGeometry(2,20,20),new THREE.MeshPhongMaterial());
+      let tip = cannon.localToWorld(new THREE.Vector3(10,0,0));
+      var root = cannon.localToWorld(new THREE.Vector3(0,0,0));
+      ball.position.copy(tip);
+		  tip.sub (root).normalize().multiplyScalar (60);  // direction   
+  		BALLs.push(new balls (ball.clone(),ball.position.x,ball.position.y,ball.position.z,tip));
+  }
+  
+  let dt=clock.getDelta();
+  BALLs.forEach(function(b){b.update(dt)});
+ 	
+  renderer.render (scene, camera);
+  requestAnimationFrame (animate);
+  
+}
+
+</script>
+</body>
+</html>
