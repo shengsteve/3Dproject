@@ -182,29 +182,20 @@ function animate() {
   render();
 }
 function CheckIntersect(car,cylinder){
-			let rad = cylinder.rad;
-			let rad2 = rad*rad;
-      let center = new THREE.Vector3(cylinder.x,cylinder.y,cylinder.z);
-      var max = car.localToWorld(new THREE.Vector3(5,0,-4));
-      var max2 = car.localToWorld(new THREE.Vector3(5,0,4));
-      var cenr = car.localToWorld(new THREE.Vector3(5,0,0));
-      var min = car.localToWorld(new THREE.Vector3(-5,0,-4));
-      var min2 = car.localToWorld(new THREE.Vector3(-5,0,4));
-      var cenl = car.localToWorld(new THREE.Vector3(-5,0,0));
       
-      let maxsub = max.clone().sub(center);
-      let max2sub = max2.clone().sub(center);
-      let cenrsub = cenr.clone().sub(center);
-      let minsub = min.clone().sub(center);
-      let min2sub = min2.clone().sub(center);
-      let cenlsub = cenl.clone().sub(center);
+	  var center = new THREE.Vector3(cylinder.x,cylinder.y,cylinder.z);
+      var rad = cylinder.rad, rad2 = rad*rad;
+      var max = car.localToWorld(new THREE.Vector3(5,0,-4)), max2 = car.localToWorld(new THREE.Vector3(5,0,4));
+      var min = car.localToWorld(new THREE.Vector3(-5,0,-4)), min2 = car.localToWorld(new THREE.Vector3(-5,0,4));
+      var cenr = car.localToWorld(new THREE.Vector3(5,0,0)), cenl = car.localToWorld(new THREE.Vector3(-5,0,0));
       
-      let maxl=maxsub.x*maxsub.x+maxsub.z*maxsub.z;
-      let max2l=max2sub.x*max2sub.x+max2sub.z*max2sub.z;
-      let cenrl=cenrsub.x*cenrsub.x+cenrsub.z*cenrsub.z;
-      let minl=minsub.x*minsub.x+minsub.z*minsub.z;
-      let min2l=min2sub.x*min2sub.x+min2sub.z*min2sub.z;
-      let cenll=cenlsub.x*cenlsub.x+cenlsub.z*cenlsub.z;
+      var maxsub = max.clone().sub(center), max2sub = max2.clone().sub(center);
+      var minsub = min.clone().sub(center), min2sub = min2.clone().sub(center);
+      var cenrsub = cenr.clone().sub(center), cenlsub = cenl.clone().sub(center);
+      
+      var maxl = maxsub.x*maxsub.x+maxsub.z*maxsub.z, max2l = max2sub.x*max2sub.x+max2sub.z*max2sub.z;  
+      var minl = minsub.x*minsub.x+minsub.z*minsub.z, min2l = min2sub.x*min2sub.x+min2sub.z*min2sub.z;
+      var cenrl = cenrsub.x*cenrsub.x+cenrsub.z*cenrsub.z, cenll = cenlsub.x*cenlsub.x+cenlsub.z*cenlsub.z;
       
       if(maxl<minl||max2l<min2l){
       			if(maxl<max2l) return maxl<rad2;
