@@ -18,12 +18,15 @@
 		  
 <body>		  
 <div id="info">Move：Up/Down/Right/Left Stop：space</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/107/three.min.js"></script>
-<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js"></script>
+    <script src="https://threejs.org/build/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+	<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/MTLLoader.js"></script>
+    <script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/OBJLoader.js"></script>
 
  <script>
-var camera, scene, renderer, mesh, controls,orthoCam;
+var camera, scene, renderer, mesh, controls, orthoCam;
 var keyboard = new KeyboardState();
 var clock;
 var car;
@@ -38,7 +41,6 @@ class Cylinderlocal{
     this.rad=rad;
   }
 } 
-
 var cylinders=[];
     (function() {
       Math.clamp = function(val,min,max){
@@ -56,7 +58,6 @@ var cylinders=[];
       return car;
  }
    function loadCubemap() {
-
    var path = "https://threejs.org/examples/textures/cube/SwedishRoyalCastle/";
    var format = '.jpg';
    var urls = [
@@ -71,7 +72,6 @@ var cylinders=[];
    return cubeMap;
   
  }
-
     function init() {
     
       clock = new THREE.Clock();
@@ -81,7 +81,8 @@ var cylinders=[];
       camera.position.z = 250;
       camera.position.y = 150;
       orthoCam = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
-      let loader = new THREE.TextureLoader()
+      
+	  let loader = new THREE.TextureLoader()
         loader.crossOrigin = '';
         texture = loader.load('https://i.imgur.com/81hHjZB.jpg');
         texture.repeat.set(1, 1);
@@ -93,7 +94,6 @@ var cylinders=[];
           }))
         mesh.rotation.x = -Math.PI / 2;
         scene.add(mesh);
-
       
       var cubeMap = loadCubemap();
       scene.background = cubeMap;
@@ -127,14 +127,72 @@ var cylinders=[];
         cylinders.push(new Cylinderlocal(cylinder.position.x,cylinder.position.y,cylinder.position.z,size));
         scene.add( cylinder );
       }
-      car = buildVehicle();
-      scene.add(car)
- 	    renderer.autoClear = false;
+      car = new THREE.Group();
+      readModel('cars');
+      scene.add(car);
+ 	  renderer.autoClear = false;
       
+	  var light = new THREE.PointLight( 0xffffff, 1, 500 );
+      light.position.set( 0, 70, 0 );
+      scene.add(light);
+	  
     }
-  
-function update(dt) {
+	function readModel (modelName, targetSize=30) {
+            
+			var onProgress = function(xhr) {
+            if (xhr.lengthComputable) {
+                var percentComplete = xhr.loaded / xhr.total * 100;
+                console.log(Math.round(percentComplete, 2) + '% downloaded');
+            }
+            };
+            var onError = function(xhr) {};
+            var mtlLoader = new THREE.MTLLoader();
+            //mtlLoader.setPath('models/');
+            mtlLoader.load(modelName+'.mtl', function(materials) {
+            materials.preload();
+            var objLoader = new THREE.OBJLoader();
+            objLoader.setMaterials(materials);
+            //objLoader.setPath('models/');
+            objLoader.load(modelName+'.obj', function(object) {
+                
+                let theObject =  unitize (object, targetSize);
+                theObject.name = 'OBJ'
+                car.add (theObject);
+                
+                theObject.setRotationFromEuler (new THREE.Euler (3.1416/2, 0, -3.1416/2, 'ZYX'))
+            }, onProgress, onError);
+            });
+    }
+    
+	function unitize (object, targetSize) {  
+	
+              // find bounding box of 'object'
+              var box3 = new THREE.Box3();
+              box3.setFromObject (object);
+              var size = new THREE.Vector3();
+              size.subVectors (box3.max, box3.min);
+              var center = new THREE.Vector3();
+              center.addVectors(box3.max, box3.min).multiplyScalar (0);
+              
+              console.log ('center: ' + center.x + ', '+center.y + ', '+center.z );
+              console.log ('size: ' + size.x + ', ' +  size.y + ', '+size.z );
+              
+              // uniform scaling according to objSize
+              var objSize = Math.max (size.x, size.y, size.z);
+              var scaleSet = targetSize/objSize;
+                    
+              var theObject =  new THREE.Object3D();
+              theObject.add (object);
+              object.scale.set (scaleSet, scaleSet, scaleSet);
+              object.position.set (-center.x*scaleSet, -center.y*scaleSet, -center.z*scaleSet);
+              object.rotation.z=Math.PI/2;
+			  object.position.x-=10;
+              
+              return theObject;
+                  
+    }
 
+function update(dt) {
   keyboard.update();
 	if ( keyboard.pressed("left") ) 
 		angle += 0.1;               
@@ -168,26 +226,23 @@ function update(dt) {
 }
 
 function animate() {
-
   controls.update();
-
   var dt = clock.getDelta();
   update(dt);
-
   // car update
   car.position.copy(pos);
   car.rotation.y = angle;
-
   requestAnimationFrame(animate);
   render();
 }
+
 function CheckIntersect(car,cylinder){
       
 	  var center = new THREE.Vector3(cylinder.x,cylinder.y,cylinder.z);
       var rad = cylinder.rad, rad2 = rad*rad;
-      var max = car.localToWorld(new THREE.Vector3(5,0,-4)), max2 = car.localToWorld(new THREE.Vector3(5,0,4));
-      var min = car.localToWorld(new THREE.Vector3(-5,0,-4)), min2 = car.localToWorld(new THREE.Vector3(-5,0,4));
-      var cenr = car.localToWorld(new THREE.Vector3(5,0,0)), cenl = car.localToWorld(new THREE.Vector3(-5,0,0));
+      var max = car.localToWorld(new THREE.Vector3(15,0,-5)), max2 = car.localToWorld(new THREE.Vector3(15,0,5));
+      var min = car.localToWorld(new THREE.Vector3(-15,0,-5)), min2 = car.localToWorld(new THREE.Vector3(-15,0,5));
+      var cenr = car.localToWorld(new THREE.Vector3(15,0,0)), cenl = car.localToWorld(new THREE.Vector3(-15,0,0));
       
       var maxsub = max.clone().sub(center), max2sub = max2.clone().sub(center);
       var minsub = min.clone().sub(center), min2sub = min2.clone().sub(center);
