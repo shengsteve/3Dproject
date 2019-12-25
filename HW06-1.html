@@ -220,10 +220,22 @@ function init() {
   ///////////////////////////////////////
   sceneColor = new THREE.Scene();
 
-  var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
-  var torusKnot = new THREE.Mesh(new THREE.TeapotBufferGeometry(10), material );
-  sceneColor.add( torusKnot );
-  torusKnot.position.set(-30,45,-0);
+ teapotMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      lightpos: {
+        type: 'v3',
+        value: new THREE.Vector3(0, 30, 20)
+      }
+    },
+    vertexShader: document.getElementById('myVertexShader').textContent,
+    fragmentShader: document.getElementById('myFragmentShader').textContent
+  });
+  teapotMaterial.transparent = true;
+  var teapot = new THREE.Mesh(new THREE.TeapotBufferGeometry(10), teapotMaterial);
+  var light2 = new THREE.PointLight( 0xffffff, 1);  
+  light2.position.set(50,200,50);
+  teapot.position.set(-40,45,0);
+  sceneColor.add(teapot,light2);		
   
   renderTarget = new THREE.WebGLRenderTarget (width, height);
 ////////////////////////////////////////////////////////////////////////
@@ -405,6 +417,7 @@ return theObject;
 function animate() {
   angle += 0.01;
   light.position.set(50 * Math.cos(angle), 150, 50 * Math.sin(angle));
+  teapotMaterial.uniforms.lightpos.value.copy (light.position);
   requestAnimationFrame(animate);
   // render sceneGrey to renderTarget
   renderer.setRenderTarget (renderTarget);

@@ -86,7 +86,7 @@
   varying vec2 vUv;
   void main() {
   	vec3 color = texture2D (texture, vUv).rgb;
-  	if (color.r > 0.95 && color.g > 0.95 && color.b < 0.05)  // close to (1,1,0)
+  	if (color.r > 0.99 && color.g > 0.99 && color.b < 0.01)  // close to (1,1,0)
   	   discard;
   	else
   		gl_FragColor = vec4 (color, 1);
