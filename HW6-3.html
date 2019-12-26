@@ -86,7 +86,8 @@
     
         void main() {
           vec4 vWorldpos = modelMatrix * vec4( position, 1.0 ) ;
-          vec2 myrepeat = vec2 (1.0, 1.0);
+          
+		  vec2 myrepeat = vec2 (1.0, 1.0);
           vUv = myrepeat*uv;
     
           gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
@@ -380,26 +381,23 @@
 		
             
         //////////////////////// teapot
-        teapotMaterial = new THREE.ShaderMaterial({
-                uniforms: {
-                    lightpos: {type: 'v3', value: new THREE.Vector3()},
-                    // 41 36 255
-                    kcool: {type: 'v3', value:new THREE.Vector3(145/255,68/155,50/255).clone().multiplyScalar(kcolor[2]).add(new THREE.Vector3(145/255,68/255,50/255))},
-                    // 207 151 0
-                    // 155, 255, 5
-                    kwarm: {type: 'v3', value: new THREE.Vector3(156/255,123/155,6/255).clone().multiplyScalar(kcolor[3]).add(new THREE.Vector3(207/255,151/255,0/255))},
-                    opacity: {
-                    type: 'f',
-                    value: 1.0
-                    }
-                },
-                vertexShader: document.getElementById('myVertexShader').textContent,
-                fragmentShader: document.getElementById('myFragmentShader').textContent
-                });
+              teapotMaterial = new THREE.ShaderMaterial({
+          uniforms: {
+            lightpos: {type: 'v3', value: new THREE.Vector3()},
+            kcool: {type: 'v3', value: new THREE.Vector3(0,0,1)},
+            kwarm: {type: 'v3', value: new THREE.Vector3(1,1,0)},
+            opacity: {
+              type: 'f',
+              value: 1.0
+            }
+          },
+          vertexShader: document.getElementById('myVertexShader').textContent,
+          fragmentShader: document.getElementById('myFragmentShader').textContent
+        });
                     teapotMaterial.transparent = true;
-                var teapot = new THREE.Mesh(new THREE.TeapotBufferGeometry(10), teapotMaterial);
-        teapot.position.set(-5,45,0);
-        scene0.add(teapot);
+					var teapot = new THREE.Mesh(new THREE.TeapotBufferGeometry(10), teapotMaterial);
+					teapot.position.set(-5,45,0);
+					scene0.add(teapot);
         ////////////////////////////////// obj
 
         }
